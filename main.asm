@@ -18,7 +18,7 @@ choice:
 	cmp eax, 1
 	je user_input
 	cmp eax, 0
-	je return
+	je to_infinity_and_beyond
 
 
 	mWrite	"INVALID INPUT"
@@ -225,6 +225,8 @@ return:
 		invoke HeapDestroy, other_heap_handle
 		jmp beginning
 	.endif
+
+to_infinity_and_beyond:
 	mWriteString	lines
 	mWrite			" ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### "
 	mWriteString	lines
