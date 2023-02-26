@@ -11,32 +11,18 @@ is_valid_character proc uses eax
 	ret
 is_valid_character endp
 
-is_3s_homie proc uses ecx eax edx
-	mov edx, 0
-	mov eax, ecx
-	mov ecx, 4
-	div ecx
+is_printable_character proc uses eax
+	.if (al >= 48 && al <= 57)\
+		|| (al == 32 || al == 13 || al == 10 || al == 9)\
+		|| (al >= 65 && al <= 90)\
+		|| (al >= 97 && al <= 123)
 
-	.if edx == 3
 		stc
 	.else
 		clc
 	.endif
 	ret
-is_3s_homie endp
-
-are_identical_characters proc uses eax,
-	mine:byte,
-	your:byte
-
-	mov al, mine
-	.if al == your
-		stc
-	.else
-		clc
-	.endif
-	ret
-are_identical_characters endp
+is_printable_character endp
 
 ; ------------------------------------------------------------------
 ; get_input_matrix
@@ -49,6 +35,11 @@ are_identical_characters endp
 ; ------------------------------------------------------------------
 
 get_input_matrix proc uses ecx edx
+
+	; i = ebx
+	; string = edx
+	; string[i]
+
 	
 	dec ecx
 	mov al, 0
@@ -59,6 +50,8 @@ get_input_matrix proc uses ecx edx
 		.if al == '.'
 			jmp pappu
 		.elseif al == 0Dh
+			mov byte ptr [edx + ebx], 0Dh
+			inc ebx
 			mov byte ptr [edx + ebx], 0Ah
 			call crlf
 			inc ebx
@@ -92,7 +85,7 @@ find_matrix_dimensions proc
 
 	mov al, [edx]
 	mov ecx, 1		; number of columns
-	mov ebx, 0
+	mov ebx, 0		; i = ebx
 	mov esi, 0		; index of the first '\n'
 	mov edi, 1		; number of characters (corrected)
 	jmp check_condition
@@ -112,7 +105,7 @@ find_matrix_dimensions proc
 		.endif
 
 		inc ebx
-		mov al, [edx + ebx]
+		mov al, byte ptr [edx + ebx]
 		
 	check_condition:
 		call is_valid_character ; set carry flag if valid
@@ -126,7 +119,7 @@ return:
 	div esi
 	mov [ebx], eax	; rows
 
-	mov [ebx + 4], ecx
+	mov [ebx + 4], ecx	; columns
 	mul ecx
 	mov [ebx + 8], eax
 	popad
@@ -140,16 +133,24 @@ find_matrix_dimensions endp
 ;		1- String offset				(edx)
 ; ------------------------------------------------------------------
 print_matrix proc uses ebx eax
-	mov al, [edx]
+	mov al, byte ptr [edx]
 	mov ebx, 0
 	jmp check_condition
 	keep_printing:
 		call WriteChar
 		inc ebx
-		mov al, [edx + ebx]
+		mov al, byte ptr [edx + ebx]
+
+		.if al == 10
+			call writechar
+			;mWrite	9d
+			inc ebx
+			mov al, byte ptr [edx + ebx]
+			
+		.endif
 		
 	check_condition:
-		call is_valid_character ; set carry flag if valid
+		call is_printable_character
 		jc keep_printing
 		jmp return
 return:
@@ -171,8 +172,8 @@ string_to_int_converter proc
 	; s_numbers = esi
 	; i_numbers = ebx
 
-	mov ecx, 0	; i
-	mov edi, 0	; j
+	xor ecx, ecx	; i
+	xor edi, edi	; j
 	jmp check_condition
 	keep_it_going:	
 		xor edx, edx
@@ -181,7 +182,6 @@ string_to_int_converter proc
 			
 			call is_valid_character ; set carry flag if valid
 			jnc return
-
 			
 			.if al == 13
 				inc ecx
@@ -257,7 +257,6 @@ rotate_matrix proc
 	xor edi, edi
 	xor ecx, ecx
 
-	mov ecx, 0
 	.while ecx < array_size
 		mov edi, array_size		; distributer
 		sub edi, _columns
@@ -281,8 +280,6 @@ rotate_matrix proc
 		
 		inc array_size
 	.endw
-
-
 
 return:
 	popad
@@ -371,5 +368,120 @@ return:
 	ret
 
 int_to_string_converter endp
+
+; ------------------------------------------------------------------
+; join_strings proto
+; RECIEVES:	
+;		1- Source1 string offset			(edx)
+;		2- Source2 string offset			(ebx)
+;		3- Destination string offset		(edi)
+; SPITS:
+;		1- Destination string offset		(edi)
+; ------------------------------------------------------------------
+join_strings proc uses edx ebx edi
+	xor esi, esi
+
+	mov al, original_text[esi]
+	.while al != 0
+		mov [edi + esi], al
+		inc esi
+		mov al, [original_text + esi]
+
+	.endw
+	
+	
+	xor ecx, ecx
+	mov al, byte ptr [edx + ecx]
+	.while al != 0
+		mov byte ptr [edi + esi], al
+		inc esi
+		inc ecx
+		mov al, byte ptr [edx + ecx]
+	.endw
+
+	xor ecx, ecx
+	mov al, rotated_text[ecx]
+	.while al != 0
+		mov [edi + esi], al
+		inc esi
+		inc ecx
+		mov al, [rotated_text + ecx]
+	.endw
+
+
+	xor ecx, ecx
+	mov al, byte ptr [ebx + ecx]
+	.while al != 0
+		mov byte ptr [edi + esi], al
+		inc esi
+		inc ecx
+		mov al, byte ptr [ebx + ecx]
+	.endw
+
+
+return:
+	ret
+
+join_strings endp
+
+; ------------------------------------------------------------------
+; waqar proto
+; RECIEVES:	
+; 
+; SPITS:
+;		1- Choice	(eax)
+; ------------------------------------------------------------------
+waqar proc uses edx
+	mov edx, offset user_se_input_lyn_txt
+	call OpenInputFile
+	mov matrix_file_handle, eax
+
+	mov eax, matrix_file_handle
+	mov ecx, 499
+	mov edx, offset user_se_input_lyn_string
+	invoke ReadFromFile
+
+	mov edx, offset user_se_input_lyn_string
+	call WriteString
+	call ReadDec
+	push eax
+
+	mov eax, matrix_file_handle
+	call CloseFile
+
+	pop eax
+
+	ret
+waqar endp
+
+
+fill_array_with_random_values proc
+	pushad
+	call Randomize
+	mov eax, [ebx + 8]
+	mov array_size, eax
+	
+	xor edi, edi
+	xor ecx, ecx
+	.while ecx < array_size
+		call Random32
+		push edi
+		push edx
+		xor edx, edx
+		div _thousand
+		mov eax, edx
+
+		pop edx
+		imul edi, 4
+		mov [edx + edi], eax
+		pop edi
+		inc edi
+		inc ecx
+	.endw
+
+
+	popad
+	ret
+fill_array_with_random_values endp
 
 end
