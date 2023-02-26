@@ -2,11 +2,13 @@ include Utilities.inc
 
 .code
 main proc
+beginning:
 	; Create a private heap for the this program
 	invoke HeapCreate, 0, heap_start, heap_end
 	mov heap_handle, eax
 
 choice:
+	call clrscr
 	call waqar
 
 	cmp eax, 3
@@ -213,11 +215,20 @@ join_final_strings:
 
 
 return:
+	
 	mWriteString	lines
-	mWriteSpace		5
-	mWrite			"HAVE A NICE DAY"
+	mWrite			"Wanna go again? (y/n) >>> "
+	call			ReadChar
+	call			WriteChar
+	.if al == 'y'
+		invoke HeapDestroy, heap_handle
+		invoke HeapDestroy, other_heap_handle
+		jmp beginning
+	.endif
 	mWriteString	lines
 	mWrite			" ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### "
+	mWriteString	lines
+	mWrite			"|--------------------> HAVE A NICE DAY <--------------------|"
 	mWriteString	lines
 
 	invoke ExitProcess, 0
