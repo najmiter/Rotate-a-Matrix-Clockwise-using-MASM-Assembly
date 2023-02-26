@@ -1,0 +1,15 @@
+-------------------------------------------------------------
+|--------------->  WELCOME TO THE BASEMENT  <---------------|
+-------------------------------------------------------------
+ ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+
+        --- HOW WOULD YOU LIKE TO SUPPLY THE DATA? ---
+            --- ENTER THE CORRESPONDING NUMBER ---
+
+		| 1. Amuse the user
+		| 2. Read data from file
+		| 3. Generate random pixels
+		| 0. If you regret hitting F5 (exit)
+
+
+        >>> 
