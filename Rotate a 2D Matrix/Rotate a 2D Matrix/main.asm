@@ -73,6 +73,7 @@ random:
 	mov edx, random_matrix_string
 	pop ecx
 	invoke WriteToFile
+	mov matrix_string_length, eax
 	
 	; Close the opened file for writing
 	mov eax, matrix_file_handle
