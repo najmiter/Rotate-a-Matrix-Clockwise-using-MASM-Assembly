@@ -1,0 +1,1387 @@
+Microsoft (R) Macro Assembler Version 14.34.31937.0	    03/01/23 13:28:57
+Utilities.asm						     Page 1 - 1
+
+
+				include Utilities.inc
+			      C include irvine32.inc
+			      C ; Include file for Irvine32.lib             (Irvine32.inc)
+			      C 
+			      C ;OPTION CASEMAP:NONE		; optional: make identifiers case-sensitive
+			      C 
+			      C INCLUDE SmallWin.inc		; MS-Windows prototypes, structures, and constants
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C INCLUDE VirtualKeys.inc
+			      C ; VirtualKeys.inc
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C 
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C include macros.inc
+			      C .NOLIST
+			      C .LIST
+			      C 
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C get_input_matrix proto
+			      C ; RECIEVES:	
+			      C ;		1- String offset	(edx)
+			      C ;		2- String length	(ecx)
+			      C ; SPITS:
+			      C ;		1- String		(edx)
+			      C ;		2- Number of spaces 	(ebx)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C print_matrix proto
+			      C ; RECIEVES:	
+			      C ;		1- String offset	(edx)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C find_matrix_dimensions proto
+			      C ; RECIEVES:	
+			      C ;		1- String offset		(edx)
+			      C ; SPITS:
+			      C ;		1- Number of rows		(dimenison_box[0])
+			      C ;		2- Number of columns		(dimenison_box[4])
+			      C ;		3- Number of elements		(dimenison_box[8])
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C string_to_int_converter proto
+			      C ; RECIEVES:	
+			      C ;		1- String offset			(edx)
+			      C ;		2- Array offset				(ebx)
+			      C ; SPITS:
+			      C ;		1- Filled array				(ebx)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C rotate_matrix proto
+			      C ; RECIEVES:	
+			      C ;		1- Output Array offset			(edx)
+			      C ;		2- Input Array offset			(ebx)
+			      C ; SPITS:
+			      C ;		1- Rotated array			(edx)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C int_to_string_converter proto
+			      C ; RECIEVES:	
+			      C ;		1- String offset			(edx)
+			      C ;		2- Array offset				(ebx)
+			      C ; SPITS:
+			      C ;		1- String				(edx)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C join_strings proto
+			      C ; RECIEVES:	
+			      C ;		1- Source1 string offset		(edx)
+			      C ;		2- Source2 string offset		(ebx)
+			      C ;		3- Destination string offset		(edi)
+			      C ; SPITS:
+			      C ;		1- Destination string offset		(edi)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ------------------------------------------------------------------
+			      C waqar proto
+			      C ; RECIEVES:	
+			      C ; 
+			      C ; SPITS:
+			      C ;		1- Choice	(eax)
+			      C ; ------------------------------------------------------------------
+			      C 
+			      C ; ----------------------------------------------------------------
+			      C fill_array_with_random_values proto
+			      C ; RECIEVES:	
+			      C ;		1- Empty Array	(edx)
+			      C ;		2- Array Dimensions	(ebx)
+			      C ; SPITS:
+			      C ;		1- Filled Array	(edx)
+			      C ;
+			      C ; ----------------------------------------------------------------
+			      C 
+			      C 
+ = 00000003		      C pixel_size		= 3
+ = 000003E8		      C max_matrix_area		= 1000
+			      C 
+ = 00989680		      C heap_start		= 10000000
+ = 35A4E900		      C heap_end		= 900000000
+ = 055D4A80		      C other_heap_start	= 90000000
+ = 3B8B87C0		      C other_heap_limit	= 999000000
+			      C 
+ 00000000		      C .data
+ 00000000 4D 61 74 72 69      C 	matrix_txt					byte "Matrix.txt", 0
+	   78 2E 74 78 74
+	   00
+ 0000000B 4F 75 74 70 75      C 	output_matrix_txt				byte "Output Matrix.txt", 0
+	   74 20 4D 61 74
+	   72 69 78 2E 74
+	   78 74 00
+ 0000001D 75 73 65 72 20      C 	user_se_input_lyn_txt				byte "user se input lyn.txt", 0
+	   73 65 20 69 6E
+	   70 75 74 20 6C
+	   79 6E 2E 74 78
+	   74 00
+			      C 
+ 00000033 54 68 65 20 66      C 	original_text					byte "The followig is the matrix read from the file", 10, 10, 0
+	   6F 6C 6C 6F 77
+	   69 67 20 69 73
+	   20 74 68 65 20
+	   6D 61 74 72 69
+	   78 20 72 65 61
+	   64 20 66 72 6F
+	   6D 20 74 68 65
+	   20 66 69 6C 65
+	   0A 0A 00
+ 00000063 0A 54 68 65 20      C 	rotated_text					byte 10, "The following is the rotated matrix", 10, 10, 0
+	   66 6F 6C 6C 6F
+	   77 69 6E 67 20
+	   69 73 20 74 68
+	   65 20 72 6F 74
+	   61 74 65 64 20
+	   6D 61 74 72 69
+	   78 0A 0A 00
+			      C 
+ 0000008A  000001F4 [	      C 	user_se_input_lyn_string			byte 500 dup(0)
+	    00
+	   ]
+			      C 
+			      C 
+ 0000027E 00000000	      C 	heap_handle					handle	?
+ 00000282 00000000	      C 	other_heap_handle				handle	?
+ 00000286 00000000	      C 	matrix_file_handle				handle	?
+ 0000028A 00000000	      C 	heap_handle_for_file_input_matrix		handle	?
+ 0000028E 00000000	      C 	heap_handle_for_user_input_matrix		handle	?
+ 00000292 00000000	      C 	heap_handle_for_input_dword_array_ptr		handle	?
+ 00000296 00000000	      C 	heap_handle_for_output_rotated_matrix_string	handle	?
+ 0000029A 00000000	      C 	heap_handle_for_output_rotated_matrix_array	handle	?
+			      C 	
+ 0000029E 00000000	      C 	matrix_string_from_user_input			dd	?
+ 000002A2 00000000	      C 	matrix_input_from_file				dd	?
+			      C 
+ 000002A6 00000000	      C 	random_matrix_string				dd	?
+ 000002AA 00000000	      C 	random_matrix_array				dd	?
+ 000002AE 00000000	      C 	random_matrix_string_rotated			dd	?
+ 000002B2 00000000	      C 	random_matrix_array_rotated			dd	?
+			      C 
+ 000002B6 00000000	      C 	output_rotated_matrix_string			dd	?
+ 000002BA 00000000	      C 	output_rotated_matrix_array			dd	?
+			      C 
+ 000002BE 00000000	      C 	output_final_string_ptr				dd	?						
+			      C 	
+ 000002C2 000003E8	      C 	matrix_string_length				dd	max_matrix_area
+			      C 
+ 000002C6 00000000	      C 	input_dword_array_ptr				dd	?
+			      C 
+			      C 
+			      C 	; rows, columns, size
+ 000002CA  00000003 [	      C 	dimension_box				dd	3 dup(0)
+	    00000000
+	   ]
+ 000002D6 0A 0A 0A 00	      C 	lines					db	10,10,10,0
+			      C 
+ 000002DA 0000000A	      C 	by_ten					dd	10
+ 000002DE 00000004	      C 	by_four					dd	4
+ 000002E2 00000000	      C 	_zero					dd	0
+ 000002E6 000003E8	      C 	_thousand				dd	1000
+			      C 
+ 000002EA 00000000	      C 	array_size				dd	?
+ 000002EE 00000000	      C 	_columns				dd	?
+ 000002F2 00000000	      C 	_rows					dd	?
+ 000002F6 00000000	      C 	remainder_holder			dd	?
+			      C 
+ 000002FA 00000064	      C 	pixel_divider				dd 100
+ 000002FE 00000064	      C 	divider					dd 100
+			      C 
+
+ 00000000			.code
+
+ 00000000			is_valid_character proc uses eax
+ 00000000  50		   *	    push   eax
+					.if (al >= 48 && al <= 57) || (al == 32 || al == 13 || al == 10)
+ 00000001  3C 30	   *	    cmp    al, 030h
+ 00000003  72 04	   *	    jb	@C0003
+ 00000005  3C 39	   *	    cmp    al, 039h
+ 00000007  76 0C	   *	    jbe    @C0002
+ 00000009		   *@C0003:
+ 00000009  3C 20	   *	    cmp    al, 020h
+ 0000000B  74 08	   *	    je	@C0002
+ 0000000D  3C 0D	   *	    cmp    al, 00Dh
+ 0000000F  74 04	   *	    je	@C0002
+ 00000011  3C 0A	   *	    cmp    al, 00Ah
+ 00000013  75 03	   *	    jne    @C0001
+ 00000015		   *@C0002:
+ 00000015  F9					stc
+					.else
+ 00000016  EB 01	   *	    jmp    @C0007
+ 00000018		   *@C0001:
+ 00000018  F8					clc
+					.endif
+ 00000019		   *@C0007:
+					ret
+ 00000019  58		   *	    pop    eax
+ 0000001A  C3		   *	    ret    00000h
+ 0000001B			is_valid_character endp
+
+ 0000001B			is_printable_character proc uses eax
+ 0000001B  50		   *	    push   eax
+					.if (al >= 48 && al <= 57)\
+						|| (al == 32 || al == 13 || al == 10 || al == 9)\
+						|| (al >= 65 && al <= 90)\
+						|| (al >= 97 && al <= 123)
+ 0000001C  3C 30	   *	    cmp    al, 030h
+ 0000001E  72 04	   *	    jb	@C000C
+ 00000020  3C 39	   *	    cmp    al, 039h
+ 00000022  76 20	   *	    jbe    @C0009
+ 00000024		   *@C000C:
+ 00000024  3C 20	   *	    cmp    al, 020h
+ 00000026  74 1C	   *	    je	@C0009
+ 00000028  3C 0D	   *	    cmp    al, 00Dh
+ 0000002A  74 18	   *	    je	@C0009
+ 0000002C  3C 0A	   *	    cmp    al, 00Ah
+ 0000002E  74 14	   *	    je	@C0009
+ 00000030  3C 09	   *	    cmp    al, 009h
+ 00000032  74 10	   *	    je	@C0009
+ 00000034  3C 41	   *	    cmp    al, 041h
+ 00000036  72 04	   *	    jb	@C000A
+ 00000038  3C 5A	   *	    cmp    al, 05Ah
+ 0000003A  76 08	   *	    jbe    @C0009
+ 0000003C		   *@C000A:
+ 0000003C  3C 61	   *	    cmp    al, 061h
+ 0000003E  72 07	   *	    jb	@C0008
+ 00000040  3C 7B	   *	    cmp    al, 07Bh
+ 00000042  77 03	   *	    ja	@C0008
+ 00000044		   *@C0009:
+
+ 00000044  F9					stc
+					.else
+ 00000045  EB 01	   *	    jmp    @C0013
+ 00000047		   *@C0008:
+ 00000047  F8					clc
+					.endif
+ 00000048		   *@C0013:
+					ret
+ 00000048  58		   *	    pop    eax
+ 00000049  C3		   *	    ret    00000h
+ 0000004A			is_printable_character endp
+
+				; ------------------------------------------------------------------
+				; get_input_matrix
+				; RECIEVES:	
+				;		1- String offset	(edx)
+				;		2- String length	(ecx)
+				; SPITS:
+				;		1- String			(edx)
+				;		2- Number of spaces (ebx)
+				; ------------------------------------------------------------------
+
+ 0000004A			get_input_matrix proc uses ecx edx
+					
+ 0000004A  51		   *	    push   ecx
+ 0000004B  52		   *	    push   edx
+ 0000004C  49				dec ecx
+ 0000004D  B0 00			mov al, 0
+ 0000004F  BB 00000000			mov ebx, 0
+					.while ebx < ecx
+ 00000054  EB 37	   *	    jmp    @C0014
+ 00000056		   *@C0015:
+ 00000056  E8 00000000 E			call readchar
+						
+						.if al == '.'
+ 0000005B  3C 2E	   *	    cmp    al, '.'
+ 0000005D  75 04	   *	    jne    @C0016
+ 0000005F  EB 30					jmp pappu
+						.elseif al == 0Dh
+ 00000061  EB 2A	   *	    jmp    @C0018
+ 00000063		   *@C0016:
+ 00000063  3C 0D	   *	    cmp    al, 00Dh
+ 00000065  75 11	   *	    jne    @C0019
+ 00000067  C6 04 1A 0D					mov byte ptr [edx + ebx], 0Dh
+ 0000006B  43						inc ebx
+ 0000006C  C6 04 1A 0A					mov byte ptr [edx + ebx], 0Ah
+ 00000070  E8 00000000 E				call crlf
+ 00000075  43						inc ebx
+						.elseif al >= 48 && al <= 57 || al == 32
+ 00000076  EB 15	   *	    jmp    @C001B
+ 00000078		   *@C0019:
+ 00000078  3C 30	   *	    cmp    al, 030h
+ 0000007A  72 04	   *	    jb	@C001E
+ 0000007C  3C 39	   *	    cmp    al, 039h
+ 0000007E  76 04	   *	    jbe    @C001D
+ 00000080		   *@C001E:
+ 00000080  3C 20	   *	    cmp    al, 020h
+ 00000082  75 09	   *	    jne    @C001C
+ 00000084		   *@C001D:
+ 00000084  E8 00000000 E				call writechar
+ 00000089  88 04 1A					mov [edx + ebx], al
+ 0000008C  43						inc ebx
+							
+						.endif
+
+					.endw
+ 0000008D		   *@C001C:
+ 0000008D		   *@C001B:
+ 0000008D		   *@C0018:
+ 0000008D		   *@C0014:
+ 0000008D  3B D9	   *	    cmp    ebx, ecx
+ 0000008F  72 C5	   *	    jb	@C0015
+
+
+ 00000091			pappu:
+					.if byte ptr [edx + ebx] != 13
+ 00000091  80 3C 1A 0D	   *	    cmp    byte ptr [edx + ebx], 00Dh
+ 00000095  74 0A	   *	    je	@C0021
+ 00000097  C6 04 1A 0D				mov byte ptr [edx + ebx], 0Dh
+ 0000009B  43					inc ebx
+ 0000009C  C6 04 1A 0A				mov byte ptr [edx + ebx], 0Ah
+ 000000A0  43					inc ebx
+					.endif
+ 000000A1		   *@C0021:
+					ret
+ 000000A1  5A		   *	    pop    edx
+ 000000A2  59		   *	    pop    ecx
+ 000000A3  C3		   *	    ret    00000h
+
+ 000000A4			get_input_matrix endp
+
+
+				; ------------------------------------------------------------------
+				; find_matrix_dimensions
+				; RECIEVES:	
+				;		1- String offset			(edx)
+				; SPITS:
+				;		1- Number of rows			(dimenison_box[0])
+				;		2- Number of columns		(dimenison_box[4])
+				;		3- Number of elements		(dimenison_box[8])
+				; ------------------------------------------------------------------
+ 000000A4			find_matrix_dimensions proc
+ 000000A4  60				pushad
+ 000000A5  53				push ebx
+
+ 000000A6  8A 02			mov al, [edx]
+ 000000A8  B9 00000001			mov ecx, 1		; number of columns
+ 000000AD  BB 00000000			mov ebx, 0		; i = ebx
+ 000000B2  BE 00000001			mov esi, 1		; index of the first '\n'
+ 000000B7  BF 00000001			mov edi, 1		; number of characters (corrected)
+ 000000BC  EB 1F			jmp check_condition
+ 000000BE				keep_checking:
+						
+						.if al == 13 && esi == 1
+ 000000BE  3C 0D	   *	    cmp    al, 00Dh
+ 000000C0  75 08	   *	    jne    @C0023
+ 000000C2  83 FE 01	   *	    cmp    esi, 001h
+ 000000C5  75 03	   *	    jne    @C0023
+ 000000C7  8B F3					mov esi, ebx
+ 000000C9  46						inc esi
+						.endif
+ 000000CA		   *@C0023:
+
+						.if esi == 1 && al == 32
+ 000000CA  83 FE 01	   *	    cmp    esi, 001h
+ 000000CD  75 05	   *	    jne    @C0026
+ 000000CF  3C 20	   *	    cmp    al, 020h
+ 000000D1  75 01	   *	    jne    @C0026
+ 000000D3  41						inc ecx
+						.endif
+ 000000D4		   *@C0026:
+
+						.if al != 13
+ 000000D4  3C 0D	   *	    cmp    al, 00Dh
+ 000000D6  74 01	   *	    je	@C0029
+ 000000D8  47						inc edi
+						.endif
+ 000000D9		   *@C0029:
+
+ 000000D9  43					inc ebx
+ 000000DA  8A 04 1A				mov al, byte ptr [edx + ebx]
+						
+ 000000DD				check_condition:
+ 000000DD  E8 FFFFFF1E				call is_valid_character ; set carry flag if valid
+ 000000E2  72 DA				jc keep_checking
+ 000000E4  EB 00				jmp return
+ 000000E6			return:
+ 000000E6  5B				pop ebx
+
+ 000000E7  BA 00000000			mov edx, 0
+ 000000EC  8B C7			mov eax, edi
+ 000000EE  F7 F6			div esi
+ 000000F0  89 03			mov [ebx], eax	; rows
+
+ 000000F2  89 4B 04			mov [ebx + 4], ecx	; columns
+ 000000F5  F7 E1			mul ecx
+ 000000F7  89 43 08			mov [ebx + 8], eax
+ 000000FA  61				popad
+ 000000FB  C3				ret
+
+ 000000FC			find_matrix_dimensions endp
+
+				; ------------------------------------------------------------------
+				; print_matrix
+				; RECIEVES:	
+				;		1- String offset				(edx)
+				; ------------------------------------------------------------------
+ 000000FC			print_matrix proc uses ebx eax
+ 000000FC  53		   *	    push   ebx
+ 000000FD  50		   *	    push   eax
+ 000000FE  8A 02			mov al, byte ptr [edx]
+ 00000100  BB 00000000			mov ebx, 0
+ 00000105  EB 16			jmp check_condition
+ 00000107				keep_printing:
+ 00000107  E8 00000000 E			call WriteChar
+ 0000010C  43					inc ebx
+ 0000010D  8A 04 1A				mov al, byte ptr [edx + ebx]
+
+						.if al == 10
+ 00000110  3C 0A	   *	    cmp    al, 00Ah
+ 00000112  75 09	   *	    jne    @C002B
+ 00000114  E8 00000000 E				call writechar
+							;mWrite	9d
+ 00000119  43						inc ebx
+ 0000011A  8A 04 1A					mov al, byte ptr [edx + ebx]
+							
+						.endif
+ 0000011D		   *@C002B:
+						
+ 0000011D				check_condition:
+ 0000011D  E8 FFFFFEF9				call is_printable_character
+ 00000122  72 E3				jc keep_printing
+ 00000124  EB 00				jmp return
+ 00000126			return:
+					ret
+ 00000126  58		   *	    pop    eax
+ 00000127  5B		   *	    pop    ebx
+ 00000128  C3		   *	    ret    00000h
+
+ 00000129			print_matrix endp
+
+
+				; ------------------------------------------------------------------
+				; string_to_int_converter
+				; RECIEVES:	
+				;		1- String offset			(edx)
+				;		2- Array offset				(ebx)
+				; SPITS:
+				;		1- Filled array				(ebx)
+				; ------------------------------------------------------------------
+ 00000129			string_to_int_converter proc
+ 00000129  60				pushad
+					; s_numbers = esi
+					; i_numbers = ebx
+
+ 0000012A  33 C9			xor ecx, ecx	; i
+ 0000012C  33 FF			xor edi, edi	; j
+ 0000012E  EB 56			jmp check_condition
+ 00000130				keep_it_going:	
+ 00000130  33 D2				xor edx, edx
+ 00000132  89 14 3B				mov [ebx + edi], edx
+						.while al != 32
+ 00000135  EB 3B	   *	    jmp    @C002D
+ 00000137		   *@C002E:
+							
+ 00000137  E8 FFFFFEC4					call is_valid_character ; set carry flag if valid
+ 0000013C  73 54					jnc return
+							
+							.if al == 13
+ 0000013E  3C 0D	   *	    cmp    al, 00Dh
+ 00000140  75 03	   *	    jne    @C002F
+ 00000142  41							inc ecx
+ 00000143  EB 31						jmp after_maths
+							.endif
+
+ 00000145		   *@C002F:
+ 00000145  53						push ebx
+ 00000146  57						push edi
+
+ 00000147  0F B6 14 0E					movzx edx, byte ptr [esi + ecx]
+ 0000014B  83 EA 30					sub edx, 48
+ 0000014E  0F AF 15					imul edx, pixel_divider
+	   000002FA R
+							
+ 00000155  01 14 3B					add [ebx + edi], edx
+
+ 00000158  50						push eax
+ 00000159  33 D2					xor edx, edx
+ 0000015B  A1 000002FA R				mov eax, pixel_divider
+ 00000160  F7 35 000002DA R				div by_ten
+ 00000166  A3 000002FA R				mov pixel_divider, eax
+ 0000016B  58						pop eax
+
+ 0000016C  41						inc ecx
+ 0000016D  8A 04 0E					mov al, byte ptr [esi + ecx]
+
+ 00000170  5F						pop edi
+ 00000171  5B						pop ebx
+
+						.endw
+ 00000172		   *@C002D:
+ 00000172  3C 20	   *	    cmp    al, 020h
+ 00000174  75 C1	   *	    jne    @C002E
+ 00000176				after_maths:
+ 00000176  50					push eax
+ 00000177  A1 000002FE R			mov eax, divider
+ 0000017C  A3 000002FA R			mov pixel_divider, eax
+ 00000181  58					pop eax
+
+ 00000182  83 C7 04				add edi, 4
+ 00000185  41					inc ecx
+						
+ 00000186				check_condition:
+ 00000186  8A 04 0E				mov al, [esi + ecx]
+ 00000189  E8 FFFFFE72				call is_valid_character ; set carry flag if valid
+ 0000018E  72 A0				jc keep_it_going
+ 00000190  EB 00				jmp return
+ 00000192			return:
+ 00000192  61				popad
+ 00000193  C3				ret
+ 00000194			string_to_int_converter endp
+
+
+				; ------------------------------------------------------------------
+				; rotate_matrix 
+				; RECIEVES:	
+				;		1- Output Array offset			(edx)
+				;		2- Input Array offset			(ebx)
+				; SPITS:
+				;		1- Rotated array				(edx)
+				; ------------------------------------------------------------------
+ 00000194			rotate_matrix proc
+ 00000194  60				pushad
+					; edx = output
+					; ebx = input
+					; esi = dimensions
+
+ 00000195  8B 3E			mov edi, [esi]		; rows
+ 00000197  8B 4E 04			mov ecx, [esi + 4]	; columns
+ 0000019A  8B 46 08			mov eax, [esi + 8]	; size
+					
+ 0000019D  89 0D 000002EE R		mov _columns, ecx
+ 000001A3  89 3D 000002F2 R		mov _rows, edi
+ 000001A9  A3 000002EA R		mov array_size, eax
+					
+ 000001AE  33 C0			xor eax, eax
+ 000001B0  33 FF			xor edi, edi
+ 000001B2  33 C9			xor ecx, ecx
+
+					.while ecx < array_size
+ 000001B4  EB 33	   *	    jmp    @C0032
+ 000001B6		   *@C0033:
+ 000001B6  8B 3D 000002EA R			mov edi, array_size		; distributer
+ 000001BC  2B 3D 000002EE R			sub edi, _columns
+						
+						.while edi < array_size
+ 000001C2  EB 17	   *	    jmp    @C0034
+ 000001C4		   *@C0035:
+ 000001C4  51						push ecx
+ 000001C5  57						push edi
+							
+ 000001C6  6B FF 04					imul edi, 4		; 0
+ 000001C9  6B C9 04					imul ecx, 4		; 0
+ 000001CC  8B 04 3B					mov eax, [ebx + edi]
+ 000001CF  89 04 0A					mov [edx + ecx], eax
+
+							
+ 000001D2  5F						pop edi
+ 000001D3  2B 3D 000002EE R				sub edi, _columns
+							
+ 000001D9  59						pop ecx
+ 000001DA  41						inc ecx
+						.endw
+ 000001DB		   *@C0034:
+ 000001DB  3B 3D 000002EA R *	    cmp    edi, array_size
+ 000001E1  72 E1	   *	    jb	@C0035
+						
+ 000001E3  FF 05 000002EA R			inc array_size
+					.endw
+ 000001E9		   *@C0032:
+ 000001E9  3B 0D 000002EA R *	    cmp    ecx, array_size
+ 000001EF  72 C5	   *	    jb	@C0033
+
+ 000001F1			return:
+ 000001F1  61				popad
+ 000001F2  C3				ret
+
+ 000001F3			rotate_matrix endp
+
+				; ------------------------------------------------------------------
+				; int_string_converter
+				; RECIEVES:	
+				;		1- String offset			(edx)
+				;		2- Array offset				(ebx)
+				; SPITS:
+				;		1- String					(edx)
+				; ------------------------------------------------------------------
+ 000001F3			int_to_string_converter proc
+ 000001F3  60				pushad
+
+ 000001F4  8B 3E			mov edi, [esi]		; rows
+ 000001F6  8B 4E 04			mov ecx, [esi + 4]	; columns
+ 000001F9  8B 46 08			mov eax, [esi + 8]	; size
+
+ 000001FC  89 3D 000002F2 R		mov _rows, edi
+ 00000202  89 0D 000002EE R		mov _columns, ecx
+ 00000208  A3 000002EA R		mov array_size, eax
+
+ 0000020D  33 C0			xor eax, eax
+ 0000020F  33 C9			xor ecx, ecx
+
+ 00000211  BE 00000000			mov esi, 0		; string indexes
+ 00000216  B9 00000000			mov ecx, 0
+					.while ecx < array_size
+ 0000021B  EB 59	   *	    jmp    @C0038
+ 0000021D		   *@C0039:
+ 0000021D  57					push edi			; for later use
+						;xor edi, edi
+						
+ 0000021E  51					push ecx
+ 0000021F  6B C9 04				imul ecx, 4
+ 00000222  8B 04 0B				mov eax, [ebx + ecx]	; number = eax
+ 00000225  59					pop ecx
+
+ 00000226  8B 3D 000002FA R			mov edi, pixel_divider	; divider = edi
+						.while edi != 0
+ 0000022C  EB 26	   *	    jmp    @C003A
+ 0000022E		   *@C003B:
+ 0000022E  52						push edx
+ 0000022F  33 D2					xor edx, edx
+ 00000231  F7 F7					div edi
+ 00000233  83 C0 30					add eax, 48
+ 00000236  89 15 000002F6 R				mov remainder_holder, edx
+
+ 0000023C  5A						pop edx
+ 0000023D  88 04 32					mov byte ptr [edx + esi], al
+ 00000240  46						inc esi
+
+ 00000241  52						push edx
+							
+ 00000242  8B C7					mov eax, edi
+ 00000244  33 D2					xor edx, edx
+ 00000246  F7 35 000002DA R				div by_ten
+ 0000024C  8B F8					mov edi, eax
+
+ 0000024E  5A						pop edx
+
+ 0000024F  A1 000002F6 R				mov eax, remainder_holder
+							
+						.endw
+ 00000254		   *@C003A:
+ 00000254  0B FF	   *	    or	edi, edi
+ 00000256  75 D6	   *	    jne    @C003B
+
+ 00000258  41					inc ecx
+						
+ 00000259  5F					pop edi
+ 0000025A  4F					dec edi
+						.if edi == 0
+ 0000025B  0B FF	   *	    or	edi, edi
+ 0000025D  75 12	   *	    jne    @C003D
+ 0000025F  C6 04 32 0D					mov byte ptr [edx + esi], 13
+ 00000263  46						inc esi
+ 00000264  C6 04 32 0A					mov byte ptr [edx + esi], 10
+ 00000268  46						inc esi
+ 00000269  8B 3D 000002F2 R				mov edi, _rows
+						.else
+ 0000026F  EB 05	   *	    jmp    @C003F
+ 00000271		   *@C003D:
+ 00000271  C6 04 32 20					mov byte ptr [edx + esi], 32
+ 00000275  46						inc esi
+						.endif
+
+
+					.endw
+ 00000276		   *@C003F:
+ 00000276		   *@C0038:
+ 00000276  3B 0D 000002EA R *	    cmp    ecx, array_size
+ 0000027C  72 9F	   *	    jb	@C0039
+
+ 0000027E			return:
+ 0000027E  61				popad
+ 0000027F  C3				ret
+
+ 00000280			int_to_string_converter endp
+
+				; ------------------------------------------------------------------
+				; join_strings proto
+				; RECIEVES:	
+				;		1- Source1 string offset			(edx)
+				;		2- Source2 string offset			(ebx)
+				;		3- Destination string offset		(edi)
+				; SPITS:
+				;		1- Destination string offset		(edi)
+				; ------------------------------------------------------------------
+ 00000280			join_strings proc uses edx ebx edi
+ 00000280  52		   *	    push   edx
+ 00000281  53		   *	    push   ebx
+ 00000282  57		   *	    push   edi
+ 00000283  33 F6			xor esi, esi
+
+ 00000285  8A 86 00000033 R		mov al, original_text[esi]
+					.while al != 0
+ 0000028B  EB 0A	   *	    jmp    @C0041
+ 0000028D		   *@C0042:
+ 0000028D  88 04 37				mov [edi + esi], al
+ 00000290  46					inc esi
+ 00000291  8A 86 00000033 R			mov al, [original_text + esi]
+
+					.endw
+ 00000297		   *@C0041:
+ 00000297  0A C0	   *	    or	al, al
+ 00000299  75 F2	   *	    jne    @C0042
+					
+					
+ 0000029B  33 C9			xor ecx, ecx
+ 0000029D  8A 04 0A			mov al, byte ptr [edx + ecx]
+					.while al != 0
+ 000002A0  EB 08	   *	    jmp    @C0044
+ 000002A2		   *@C0045:
+ 000002A2  88 04 37				mov byte ptr [edi + esi], al
+ 000002A5  46					inc esi
+ 000002A6  41					inc ecx
+ 000002A7  8A 04 0A				mov al, byte ptr [edx + ecx]
+					.endw
+ 000002AA		   *@C0044:
+ 000002AA  0A C0	   *	    or	al, al
+ 000002AC  75 F4	   *	    jne    @C0045
+
+ 000002AE  33 C9			xor ecx, ecx
+ 000002B0  8A 81 00000063 R		mov al, rotated_text[ecx]
+					.while al != 0
+ 000002B6  EB 0B	   *	    jmp    @C0047
+ 000002B8		   *@C0048:
+ 000002B8  88 04 37				mov [edi + esi], al
+ 000002BB  46					inc esi
+ 000002BC  41					inc ecx
+ 000002BD  8A 81 00000063 R			mov al, [rotated_text + ecx]
+					.endw
+ 000002C3		   *@C0047:
+ 000002C3  0A C0	   *	    or	al, al
+ 000002C5  75 F1	   *	    jne    @C0048
+
+
+ 000002C7  33 C9			xor ecx, ecx
+ 000002C9  8A 04 0B			mov al, byte ptr [ebx + ecx]
+					.while al != 0
+ 000002CC  EB 08	   *	    jmp    @C004A
+ 000002CE		   *@C004B:
+ 000002CE  88 04 37				mov byte ptr [edi + esi], al
+ 000002D1  46					inc esi
+ 000002D2  41					inc ecx
+ 000002D3  8A 04 0B				mov al, byte ptr [ebx + ecx]
+					.endw
+ 000002D6		   *@C004A:
+ 000002D6  0A C0	   *	    or	al, al
+ 000002D8  75 F4	   *	    jne    @C004B
+
+
+ 000002DA			return:
+					ret
+ 000002DA  5F		   *	    pop    edi
+ 000002DB  5B		   *	    pop    ebx
+ 000002DC  5A		   *	    pop    edx
+ 000002DD  C3		   *	    ret    00000h
+
+ 000002DE			join_strings endp
+
+				; ------------------------------------------------------------------
+				; waqar proto
+				; RECIEVES:	
+				; 
+				; SPITS:
+				;		1- Choice	(eax)
+				; ------------------------------------------------------------------
+ 000002DE			waqar proc uses edx
+ 000002DE  52		   *	    push   edx
+ 000002DF  BA 0000001D R		mov edx, offset user_se_input_lyn_txt
+ 000002E4  E8 00000000 E		call OpenInputFile
+ 000002E9  A3 00000286 R		mov matrix_file_handle, eax
+
+ 000002EE  A1 00000286 R		mov eax, matrix_file_handle
+ 000002F3  B9 000001F3			mov ecx, 499
+ 000002F8  BA 0000008A R		mov edx, offset user_se_input_lyn_string
+					invoke ReadFromFile
+ 000002FD  E8 00000000 E   *	    call   ReadFromFile
+
+ 00000302  BA 0000008A R		mov edx, offset user_se_input_lyn_string
+ 00000307  E8 00000000 E		call WriteString
+ 0000030C  E8 00000000 E		call ReadDec
+ 00000311  50				push eax
+
+ 00000312  A1 00000286 R		mov eax, matrix_file_handle
+ 00000317  E8 00000000 E		call CloseFile
+
+ 0000031C  58				pop eax
+
+					ret
+ 0000031D  5A		   *	    pop    edx
+ 0000031E  C3		   *	    ret    00000h
+ 0000031F			waqar endp
+
+
+ 0000031F			fill_array_with_random_values proc
+ 0000031F  60				pushad
+ 00000320  E8 00000000 E		call Randomize
+ 00000325  8B 43 08			mov eax, [ebx + 8]
+ 00000328  A3 000002EA R		mov array_size, eax
+					
+ 0000032D  33 FF			xor edi, edi
+ 0000032F  33 C9			xor ecx, ecx
+					.while ecx < array_size
+ 00000331  EB 1B	   *	    jmp    @C004D
+ 00000333		   *@C004E:
+ 00000333  E8 00000000 E			call Random32
+ 00000338  57					push edi
+ 00000339  52					push edx
+ 0000033A  33 D2				xor edx, edx
+ 0000033C  F7 35 000002E6 R			div _thousand
+ 00000342  8B C2				mov eax, edx
+
+ 00000344  5A					pop edx
+ 00000345  6B FF 04				imul edi, 4
+ 00000348  89 04 3A				mov [edx + edi], eax
+ 0000034B  5F					pop edi
+ 0000034C  47					inc edi
+ 0000034D  41					inc ecx
+					.endw
+ 0000034E		   *@C004D:
+ 0000034E  3B 0D 000002EA R *	    cmp    ecx, array_size
+ 00000354  72 DD	   *	    jb	@C004E
+
+
+ 00000356  61				popad
+ 00000357  C3				ret
+ 00000358			fill_array_with_random_values endp
+
+				end
+Microsoft (R) Macro Assembler Version 14.34.31937.0	    03/01/23 13:28:57
+Utilities.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+IsDefined  . . . . . . . . . . .	Func
+Startup  . . . . . . . . . . . .	Proc
+mDumpMem . . . . . . . . . . . .	Proc
+mDump  . . . . . . . . . . . . .	Proc
+mGotoxy  . . . . . . . . . . . .	Proc
+mReadString  . . . . . . . . . .	Proc
+mShowRegister  . . . . . . . . .	Proc
+mShow  . . . . . . . . . . . . .	Proc
+mWriteLn . . . . . . . . . . . .	Proc
+mWriteSpace  . . . . . . . . . .	Proc
+mWriteString . . . . . . . . . .	Proc
+mWrite . . . . . . . . . . . . .	Proc
+
+
+Structures and Unions:
+
+                N a m e                  Size
+                                         Offset      Type
+
+CONSOLE_CURSOR_INFO  . . . . . .	 00000008
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+  bVisible . . . . . . . . . . .	 00000004	 DWord
+CONSOLE_SCREEN_BUFFER_INFO . . .	 00000016
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+  dwCursorPosition . . . . . . .	 00000004	 DWord
+  wAttributes  . . . . . . . . .	 00000008	 Word
+  srWindow . . . . . . . . . . .	 0000000A	 QWord
+  dwMaximumWindowSize  . . . . .	 00000012	 DWord
+COORD  . . . . . . . . . . . . .	 00000004
+  X  . . . . . . . . . . . . . .	 00000000	 Word
+  Y  . . . . . . . . . . . . . .	 00000002	 Word
+FILETIME . . . . . . . . . . . .	 00000008
+  loDateTime . . . . . . . . . .	 00000000	 DWord
+  hiDateTime . . . . . . . . . .	 00000004	 DWord
+FOCUS_EVENT_RECORD . . . . . . .	 00000004
+  bSetFocus  . . . . . . . . . .	 00000000	 DWord
+FPU_ENVIRON  . . . . . . . . . .	 0000001C
+  controlWord  . . . . . . . . .	 00000000	 Word
+  statusWord . . . . . . . . . .	 00000004	 Word
+  tagWord  . . . . . . . . . . .	 00000008	 Word
+  instrPointerOffset . . . . . .	 0000000C	 DWord
+  instrPointerSelector . . . . .	 00000010	 DWord
+  operandPointerOffset . . . . .	 00000014	 DWord
+  operandPointerSelector . . . .	 00000018	 Word
+INPUT_RECORD . . . . . . . . . .	 00000014
+  EventType  . . . . . . . . . .	 00000000	 Word
+  Event  . . . . . . . . . . . .	 00000004	 XmmWord
+  bKeyDown . . . . . . . . . . .	 00000000	 DWord
+  wRepeatCount . . . . . . . . .	 00000004	 Word
+  wVirtualKeyCode  . . . . . . .	 00000006	 Word
+  wVirtualScanCode . . . . . . .	 00000008	 Word
+  uChar  . . . . . . . . . . . .	 0000000A	 Word
+  UnicodeChar  . . . . . . . . .	 00000000	 Word
+  AsciiChar  . . . . . . . . . .	 00000000	 Byte
+  dwControlKeyState  . . . . . .	 0000000C	 DWord
+  dwMousePosition  . . . . . . .	 00000000	 DWord
+  dwButtonState  . . . . . . . .	 00000004	 DWord
+  dwMouseControlKeyState . . . .	 00000008	 DWord
+  dwEventFlags . . . . . . . . .	 0000000C	 DWord
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+  dwCommandId  . . . . . . . . .	 00000000	 DWord
+  bSetFocus  . . . . . . . . . .	 00000000	 DWord
+KEY_EVENT_RECORD . . . . . . . .	 00000010
+  bKeyDown . . . . . . . . . . .	 00000000	 DWord
+  wRepeatCount . . . . . . . . .	 00000004	 Word
+  wVirtualKeyCode  . . . . . . .	 00000006	 Word
+  wVirtualScanCode . . . . . . .	 00000008	 Word
+  uChar  . . . . . . . . . . . .	 0000000A	 Word
+  UnicodeChar  . . . . . . . . .	 00000000	 Word
+  AsciiChar  . . . . . . . . . .	 00000000	 Byte
+  dwControlKeyState  . . . . . .	 0000000C	 DWord
+MENU_EVENT_RECORD  . . . . . . .	 00000004
+  dwCommandId  . . . . . . . . .	 00000000	 DWord
+MOUSE_EVENT_RECORD . . . . . . .	 00000010
+  dwMousePosition  . . . . . . .	 00000000	 DWord
+  dwButtonState  . . . . . . . .	 00000004	 DWord
+  dwMouseControlKeyState . . . .	 00000008	 DWord
+  dwEventFlags . . . . . . . . .	 0000000C	 DWord
+SMALL_RECT . . . . . . . . . . .	 00000008
+  Left . . . . . . . . . . . . .	 00000000	 Word
+  Top  . . . . . . . . . . . . .	 00000002	 Word
+  Right  . . . . . . . . . . . .	 00000004	 Word
+  Bottom . . . . . . . . . . . .	 00000006	 Word
+SYSTEMTIME . . . . . . . . . . .	 00000010
+  wYear  . . . . . . . . . . . .	 00000000	 Word
+  wMonth . . . . . . . . . . . .	 00000002	 Word
+  wDayOfWeek . . . . . . . . . .	 00000004	 Word
+  wDay . . . . . . . . . . . . .	 00000006	 Word
+  wHour  . . . . . . . . . . . .	 00000008	 Word
+  wMinute  . . . . . . . . . . .	 0000000A	 Word
+  wSecond  . . . . . . . . . . .	 0000000C	 Word
+  wMilliseconds  . . . . . . . .	 0000000E	 Word
+WINDOW_BUFFER_SIZE_RECORD  . . .	 00000004
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000302 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000358 Para	  Public  'CODE'	
+
+
+Procedures, parameters, and locals:
+
+                N a m e                 Type     Value    Attr
+
+CloseFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Clrscr . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CreateFileA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CreateOutputFile . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Crlf . . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Delay  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+DumpMem  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+DumpRegs . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FileTimeToDosDateTime  . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FileTimeToSystemTime . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FlushConsoleInputBuffer  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FormatMessageA . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetCommandLineA  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetCommandTail . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleCP . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetConsoleScreenBufferInfo . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetDateTime  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetFileTime  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetKeyState  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetLastError . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetLocalTime . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetMaxXY . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetMseconds  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetNumberOfConsoleInputEvents  .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetProcessHeap . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetSystemTime  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetTextColor . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetTickCount . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Gotoxy . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+HeapAlloc  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+HeapCreate . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+HeapDestroy  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+HeapFree . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+HeapSize . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+IsDigit  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+LocalFree  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+MessageBoxA  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+MsgBoxAsk  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+MsgBox . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+OpenInputFile  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ParseDecimal32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ParseInteger32 . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+PeekConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Random32 . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+RandomRange  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Randomize  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadChar . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadDec  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadFile . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadFloat  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadFromFile . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadHex  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadInt  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadKeyFlush . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadKey  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadString . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleCursorInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleMode . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleScreenBufferSize . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTextAttribute  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTitleA . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleWindowInfo . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetFilePointer . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetLocalTime . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetTextColor . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ShowFPUStack . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Sleep  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+StrLength  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Str_compare  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Str_copy . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Str_length . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Str_trim . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Str_ucase  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SystemTimeToFileTime . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WaitMsg  . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteBinB  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteBin . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteChar  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleOutputAttribute  . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleOutputCharacterA . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteDec . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteFloat . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteHexB  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteHex . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteInt . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteStackFrameName  . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteStackFrame  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteString  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteToFile  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteWindowsMsg  . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+fill_array_with_random_values  .	P Near	 0000031F _TEXT	Length= 00000039 Public STDCALL
+find_matrix_dimensions . . . . .	P Near	 000000A4 _TEXT	Length= 00000058 Public STDCALL
+  keep_checking  . . . . . . . .	L Near	 000000BE _TEXT	
+  check_condition  . . . . . . .	L Near	 000000DD _TEXT	
+  return . . . . . . . . . . . .	L Near	 000000E6 _TEXT	
+get_input_matrix . . . . . . . .	P Near	 0000004A _TEXT	Length= 0000005A Public STDCALL
+  pappu  . . . . . . . . . . . .	L Near	 00000091 _TEXT	
+int_to_string_converter  . . . .	P Near	 000001F3 _TEXT	Length= 0000008D Public STDCALL
+  return . . . . . . . . . . . .	L Near	 0000027E _TEXT	
+is_printable_character . . . . .	P Near	 0000001B _TEXT	Length= 0000002F Public STDCALL
+is_valid_character . . . . . . .	P Near	 00000000 _TEXT	Length= 0000001B Public STDCALL
+join_strings . . . . . . . . . .	P Near	 00000280 _TEXT	Length= 0000005E Public STDCALL
+  return . . . . . . . . . . . .	L Near	 000002DA _TEXT	
+print_matrix . . . . . . . . . .	P Near	 000000FC _TEXT	Length= 0000002D Public STDCALL
+  keep_printing  . . . . . . . .	L Near	 00000107 _TEXT	
+  check_condition  . . . . . . .	L Near	 0000011D _TEXT	
+  return . . . . . . . . . . . .	L Near	 00000126 _TEXT	
+printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+rotate_matrix  . . . . . . . . .	P Near	 00000194 _TEXT	Length= 0000005F Public STDCALL
+  return . . . . . . . . . . . .	L Near	 000001F1 _TEXT	
+scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+string_to_int_converter  . . . .	P Near	 00000129 _TEXT	Length= 0000006B Public STDCALL
+  keep_it_going  . . . . . . . .	L Near	 00000130 _TEXT	
+  after_maths  . . . . . . . . .	L Near	 00000176 _TEXT	
+  check_condition  . . . . . . .	L Near	 00000186 _TEXT	
+  return . . . . . . . . . . . .	L Near	 00000192 _TEXT	
+waqar  . . . . . . . . . . . . .	P Near	 000002DE _TEXT	Length= 00000041 Public STDCALL
+wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+ALT_MASK . . . . . . . . . . . .	Number	 00000003h   
+CAPSLOCK_ON  . . . . . . . . . .	Number	 00000080h   
+CREATE_ALWAYS  . . . . . . . . .	Number	 00000002h   
+CREATE_NEW . . . . . . . . . . .	Number	 00000001h   
+CTRL_MASK  . . . . . . . . . . .	Number	 0000000Ch   
+CreateFile . . . . . . . . . . .	Text   	 CreateFileA
+DO_NOT_SHARE . . . . . . . . . .	Number	 00000000h   
+ENABLE_ECHO_INPUT  . . . . . . .	Number	 00000004h   
+ENABLE_LINE_INPUT  . . . . . . .	Number	 00000002h   
+ENABLE_MOUSE_INPUT . . . . . . .	Number	 00000010h   
+ENABLE_PROCESSED_INPUT . . . . .	Number	 00000001h   
+ENABLE_PROCESSED_OUTPUT  . . . .	Number	 00000001h   
+ENABLE_WINDOW_INPUT  . . . . . .	Number	 00000008h   
+ENABLE_WRAP_AT_EOL_OUTPUT  . . .	Number	 00000002h   
+ENHANCED_KEY . . . . . . . . . .	Number	 00000100h   
+FALSE  . . . . . . . . . . . . .	Number	 00000000h   
+FILE_APPEND_DATA . . . . . . . .	Number	 00000004h   
+FILE_ATTRIBUTE_ARCHIVE . . . . .	Number	 00000020h   
+FILE_ATTRIBUTE_COMPRESSED  . . .	Number	 00000800h   
+FILE_ATTRIBUTE_DEVICE  . . . . .	Number	 00000040h   
+FILE_ATTRIBUTE_DIRECTORY . . . .	Number	 00000010h   
+FILE_ATTRIBUTE_ENCRYPTED . . . .	Number	 00004000h   
+FILE_ATTRIBUTE_HIDDEN  . . . . .	Number	 00000002h   
+FILE_ATTRIBUTE_NORMAL  . . . . .	Number	 00000080h   
+FILE_ATTRIBUTE_NOT_CONTENT_INDEXED .	Number	 00002000h   
+FILE_ATTRIBUTE_OFFLINE . . . . .	Number	 00001000h   
+FILE_ATTRIBUTE_READONLY  . . . .	Number	 00000001h   
+FILE_ATTRIBUTE_REPARSE_POINT . .	Number	 00000400h   
+FILE_ATTRIBUTE_SPARSE_FILE . . .	Number	 00000200h   
+FILE_ATTRIBUTE_SYSTEM  . . . . .	Number	 00000004h   
+FILE_ATTRIBUTE_TEMPORARY . . . .	Number	 00000100h   
+FILE_BEGIN . . . . . . . . . . .	Number	 00000000h   
+FILE_CURRENT . . . . . . . . . .	Number	 00000001h   
+FILE_DELETE_CHILD  . . . . . . .	Number	 00000040h   
+FILE_END . . . . . . . . . . . .	Number	 00000002h   
+FILE_READ_DATA . . . . . . . . .	Number	 00000001h   
+FILE_SHARE_DELETE  . . . . . . .	Number	 00000004h   
+FILE_SHARE_READ  . . . . . . . .	Number	 00000001h   
+FILE_SHARE_WRITE . . . . . . . .	Number	 00000002h   
+FILE_WRITE_DATA  . . . . . . . .	Number	 00000002h   
+FOCUS_EVENT  . . . . . . . . . .	Number	 00000010h   
+FORMAT_MESSAGE_ALLOCATE_BUFFER .	Number	 00000100h   
+FORMAT_MESSAGE_FROM_SYSTEM . . .	Number	 00001000h   
+FormatMessage  . . . . . . . . .	Text   	 FormatMessageA
+GENERIC_ALL  . . . . . . . . . .	Number	 10000000h   
+GENERIC_EXECUTE  . . . . . . . .	Number	 20000000h   
+GENERIC_READ . . . . . . . . . .	Number	 -80000000h   
+GENERIC_WRITE  . . . . . . . . .	Number	 40000000h   
+GetCommandLine . . . . . . . . .	Text   	 GetCommandLineA
+HANDLE . . . . . . . . . . . . .	Text   	 DWORD
+HEAP_GENERATE_EXCEPTIONS . . . .	Number	 00000004h   
+HEAP_GROWABLE  . . . . . . . . .	Number	 00000002h   
+HEAP_NO_SERIALIZE  . . . . . . .	Number	 00000001h   
+HEAP_REALLOC_IN_PLACE_ONLY . . .	Number	 00000010h   
+HEAP_ZERO_MEMORY . . . . . . . .	Number	 00000008h   
+IDABORT  . . . . . . . . . . . .	Number	 00000003h   
+IDCANCEL . . . . . . . . . . . .	Number	 00000002h   
+IDCLOSE  . . . . . . . . . . . .	Number	 00000008h   
+IDCONTINUE . . . . . . . . . . .	Number	 0000000Bh   
+IDHELP . . . . . . . . . . . . .	Number	 00000009h   
+IDIGNORE . . . . . . . . . . . .	Number	 00000005h   
+IDNO . . . . . . . . . . . . . .	Number	 00000007h   
+IDOK . . . . . . . . . . . . . .	Number	 00000001h   
+IDRETRY  . . . . . . . . . . . .	Number	 00000004h   
+IDTIMEOUT  . . . . . . . . . . .	Number	 00007D00h   
+IDTRYAGAIN . . . . . . . . . . .	Number	 0000000Ah   
+IDYES  . . . . . . . . . . . . .	Number	 00000006h   
+INVALID_HANDLE_VALUE . . . . . .	Number	 -00000001h   
+KBDOWN_FLAG  . . . . . . . . . .	Number	 00000001h   
+KEY_EVENT  . . . . . . . . . . .	Number	 00000001h   
+KEY_MASKS  . . . . . . . . . . .	Number	 0000001Fh   
+LEFT_ALT_PRESSED . . . . . . . .	Number	 00000002h   
+LEFT_CTRL_PRESSED  . . . . . . .	Number	 00000008h   
+MB_ABORTRETRYIGNORE  . . . . . .	Number	 00000002h   
+MB_APPLMODAL . . . . . . . . . .	Number	 00000000h   
+MB_CANCELTRYCONTINUE . . . . . .	Number	 00000006h   
+MB_DEFBUTTON1  . . . . . . . . .	Number	 00000000h   
+MB_DEFBUTTON2  . . . . . . . . .	Number	 00000100h   
+MB_DEFBUTTON3  . . . . . . . . .	Number	 00000200h   
+MB_DEFBUTTON4  . . . . . . . . .	Number	 00000300h   
+MB_HELP  . . . . . . . . . . . .	Number	 00004000h   
+MB_ICONASTERISK  . . . . . . . .	Number	 00000040h   
+MB_ICONERROR . . . . . . . . . .	Number	 00000010h   
+MB_ICONEXCLAMATION . . . . . . .	Number	 00000030h   
+MB_ICONHAND  . . . . . . . . . .	Number	 00000010h   
+MB_ICONINFORMATION . . . . . . .	Number	 00000040h   
+MB_ICONQUESTION  . . . . . . . .	Number	 00000020h   
+MB_ICONSTOP  . . . . . . . . . .	Number	 00000010h   
+MB_ICONWARNING . . . . . . . . .	Number	 00000030h   
+MB_OKCANCEL  . . . . . . . . . .	Number	 00000001h   
+MB_OK  . . . . . . . . . . . . .	Number	 00000000h   
+MB_RETRYCANCEL . . . . . . . . .	Number	 00000005h   
+MB_SYSTEMMODAL . . . . . . . . .	Number	 00001000h   
+MB_TASKMODAL . . . . . . . . . .	Number	 00002000h   
+MB_USERICON  . . . . . . . . . .	Number	 00000080h   
+MB_YESNOCANCEL . . . . . . . . .	Number	 00000003h   
+MB_YESNO . . . . . . . . . . . .	Number	 00000004h   
+MENU_EVENT . . . . . . . . . . .	Number	 00000008h   
+MOUSE_EVENT  . . . . . . . . . .	Number	 00000002h   
+MessageBox . . . . . . . . . . .	Text   	 MessageBoxA
+NULL . . . . . . . . . . . . . .	Number	 00000000h   
+NUMLOCK_ON . . . . . . . . . . .	Number	 00000020h   
+OPEN_ALWAYS  . . . . . . . . . .	Number	 00000004h   
+OPEN_EXISTING  . . . . . . . . .	Number	 00000003h   
+PeekConsoleInput . . . . . . . .	Text   	 PeekConsoleInputA
+RIGHT_ALT_PRESSED  . . . . . . .	Number	 00000001h   
+RIGHT_CTRL_PRESSED . . . . . . .	Number	 00000004h   
+ReadConsoleInput . . . . . . . .	Text   	 ReadConsoleInputA
+ReadConsole  . . . . . . . . . .	Text   	 ReadConsoleA
+SCROLLLOCK_ON  . . . . . . . . .	Number	 00000040h   
+SHIFT_MASK . . . . . . . . . . .	Number	 00000010h   
+SHIFT_PRESSED  . . . . . . . . .	Number	 00000010h   
+STD_ERROR_HANDLE . . . . . . . .	Number	 -0000000Ch   
+STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
+STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
+SetConsoleTitle  . . . . . . . .	Text   	 SetConsoleTitleA
+TAB  . . . . . . . . . . . . . .	Number	 00000009h   
+TRUE . . . . . . . . . . . . . .	Number	 00000001h   
+TRUNCATE_EXISTING  . . . . . . .	Number	 00000005h   
+VK_11  . . . . . . . . . . . . .	Number	 000000BDh   
+VK_12  . . . . . . . . . . . . .	Number	 000000BBh   
+VK_ADD . . . . . . . . . . . . .	Number	 0000006Bh   
+VK_BACK  . . . . . . . . . . . .	Number	 00000008h   
+VK_CANCEL  . . . . . . . . . . .	Number	 00000003h   
+VK_CAPITAL . . . . . . . . . . .	Number	 00000014h   
+VK_CLEAR . . . . . . . . . . . .	Number	 0000000Ch   
+VK_CONTROL . . . . . . . . . . .	Number	 00000011h   
+VK_DECIMAL . . . . . . . . . . .	Number	 0000006Eh   
+VK_DELETE  . . . . . . . . . . .	Number	 0000002Eh   
+VK_DIVIDE  . . . . . . . . . . .	Number	 0000006Fh   
+VK_DOWN  . . . . . . . . . . . .	Number	 00000028h   
+VK_END . . . . . . . . . . . . .	Number	 00000023h   
+VK_ESCAPE  . . . . . . . . . . .	Number	 0000001Bh   
+VK_EXECUTE . . . . . . . . . . .	Number	 0000002Bh   
+VK_F10 . . . . . . . . . . . . .	Number	 00000079h   
+VK_F11 . . . . . . . . . . . . .	Number	 0000007Ah   
+VK_F12 . . . . . . . . . . . . .	Number	 0000007Bh   
+VK_F13 . . . . . . . . . . . . .	Number	 0000007Ch   
+VK_F14 . . . . . . . . . . . . .	Number	 0000007Dh   
+VK_F15 . . . . . . . . . . . . .	Number	 0000007Eh   
+VK_F16 . . . . . . . . . . . . .	Number	 0000007Fh   
+VK_F17 . . . . . . . . . . . . .	Number	 00000080h   
+VK_F18 . . . . . . . . . . . . .	Number	 00000081h   
+VK_F19 . . . . . . . . . . . . .	Number	 00000082h   
+VK_F1  . . . . . . . . . . . . .	Number	 00000070h   
+VK_F20 . . . . . . . . . . . . .	Number	 00000083h   
+VK_F21 . . . . . . . . . . . . .	Number	 00000084h   
+VK_F22 . . . . . . . . . . . . .	Number	 00000085h   
+VK_F23 . . . . . . . . . . . . .	Number	 00000086h   
+VK_F24 . . . . . . . . . . . . .	Number	 00000087h   
+VK_F2  . . . . . . . . . . . . .	Number	 00000071h   
+VK_F3  . . . . . . . . . . . . .	Number	 00000072h   
+VK_F4  . . . . . . . . . . . . .	Number	 00000073h   
+VK_F5  . . . . . . . . . . . . .	Number	 00000074h   
+VK_F6  . . . . . . . . . . . . .	Number	 00000075h   
+VK_F7  . . . . . . . . . . . . .	Number	 00000076h   
+VK_F8  . . . . . . . . . . . . .	Number	 00000077h   
+VK_F9  . . . . . . . . . . . . .	Number	 00000078h   
+VK_HELP  . . . . . . . . . . . .	Number	 0000002Fh   
+VK_HOME  . . . . . . . . . . . .	Number	 00000024h   
+VK_INSERT  . . . . . . . . . . .	Number	 0000002Dh   
+VK_LBUTTON . . . . . . . . . . .	Number	 00000001h   
+VK_LCONTROL  . . . . . . . . . .	Number	 000000A2h   
+VK_LEFT  . . . . . . . . . . . .	Number	 00000025h   
+VK_LMENU . . . . . . . . . . . .	Number	 000000A4h   
+VK_LSHIFT  . . . . . . . . . . .	Number	 000000A0h   
+VK_MENU  . . . . . . . . . . . .	Number	 00000012h   
+VK_MULTIPLY  . . . . . . . . . .	Number	 0000006Ah   
+VK_NEXT  . . . . . . . . . . . .	Number	 00000022h   
+VK_NUMLOCK . . . . . . . . . . .	Number	 00000090h   
+VK_NUMPAD0 . . . . . . . . . . .	Number	 00000060h   
+VK_NUMPAD1 . . . . . . . . . . .	Number	 00000061h   
+VK_NUMPAD2 . . . . . . . . . . .	Number	 00000062h   
+VK_NUMPAD3 . . . . . . . . . . .	Number	 00000063h   
+VK_NUMPAD4 . . . . . . . . . . .	Number	 00000064h   
+VK_NUMPAD5 . . . . . . . . . . .	Number	 00000065h   
+VK_NUMPAD6 . . . . . . . . . . .	Number	 00000066h   
+VK_NUMPAD7 . . . . . . . . . . .	Number	 00000067h   
+VK_NUMPAD8 . . . . . . . . . . .	Number	 00000068h   
+VK_NUMPAD9 . . . . . . . . . . .	Number	 00000069h   
+VK_PAUSE . . . . . . . . . . . .	Number	 00000013h   
+VK_PRINT . . . . . . . . . . . .	Number	 0000002Ah   
+VK_PRIOR . . . . . . . . . . . .	Number	 00000021h   
+VK_RBUTTON . . . . . . . . . . .	Number	 00000002h   
+VK_RCONTROL  . . . . . . . . . .	Number	 000000A3h   
+VK_RETURN  . . . . . . . . . . .	Number	 0000000Dh   
+VK_RIGHT . . . . . . . . . . . .	Number	 00000027h   
+VK_RMENU . . . . . . . . . . . .	Number	 000000A5h   
+VK_RSHIFT  . . . . . . . . . . .	Number	 000000A1h   
+VK_SCROLL  . . . . . . . . . . .	Number	 00000091h   
+VK_SEPARATER . . . . . . . . . .	Number	 0000006Ch   
+VK_SHIFT . . . . . . . . . . . .	Number	 00000010h   
+VK_SNAPSHOT  . . . . . . . . . .	Number	 0000002Ch   
+VK_SPACE . . . . . . . . . . . .	Number	 00000020h   
+VK_SUBTRACT  . . . . . . . . . .	Number	 0000006Dh   
+VK_TAB . . . . . . . . . . . . .	Number	 00000009h   
+VK_UP  . . . . . . . . . . . . .	Number	 00000026h   
+WINDOW_BUFFER_SIZE_EVENT . . . .	Number	 00000004h   
+WriteConsoleOutputCharacter  . .	Text   	 WriteConsoleOutputCharacterA
+WriteConsole . . . . . . . . . .	Text   	 WriteConsoleA
+_columns . . . . . . . . . . . .	DWord	 000002EE _DATA	
+_rows  . . . . . . . . . . . . .	DWord	 000002F2 _DATA	
+_thousand  . . . . . . . . . . .	DWord	 000002E6 _DATA	
+_zero  . . . . . . . . . . . . .	DWord	 000002E2 _DATA	
+array_size . . . . . . . . . . .	DWord	 000002EA _DATA	
+black  . . . . . . . . . . . . .	Number	 00000000h   
+blue . . . . . . . . . . . . . .	Number	 00000001h   
+brown  . . . . . . . . . . . . .	Number	 00000006h   
+by_four  . . . . . . . . . . . .	DWord	 000002DE _DATA	
+by_ten . . . . . . . . . . . . .	DWord	 000002DA _DATA	
+cyan . . . . . . . . . . . . . .	Number	 00000003h   
+dimension_box  . . . . . . . . .	DWord	 000002CA _DATA	
+divider  . . . . . . . . . . . .	DWord	 000002FE _DATA	
+exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
+gray . . . . . . . . . . . . . .	Number	 00000008h   
+green  . . . . . . . . . . . . .	Number	 00000002h   
+heap_end . . . . . . . . . . . .	Number	 35A4E900h   
+heap_handle_for_file_input_matrix 	DWord	 0000028A _DATA	
+heap_handle_for_input_dword_array_ptr 	DWord	 00000292 _DATA	
+heap_handle_for_output_rotated_matrix_array  DWord    0000029A _DATA	
+heap_handle_for_output_rotated_matrix_string . DWord    00000296 _DATA	
+heap_handle_for_user_input_matrix 	DWord	 0000028E _DATA	
+heap_handle  . . . . . . . . . .	DWord	 0000027E _DATA	
+heap_start . . . . . . . . . . .	Number	 00989680h   
+input_dword_array_ptr  . . . . .	DWord	 000002C6 _DATA	
+lightBlue  . . . . . . . . . . .	Number	 00000009h   
+lightCyan  . . . . . . . . . . .	Number	 0000000Bh   
+lightGray  . . . . . . . . . . .	Number	 00000007h   
+lightGreen . . . . . . . . . . .	Number	 0000000Ah   
+lightMagenta . . . . . . . . . .	Number	 0000000Dh   
+lightRed . . . . . . . . . . . .	Number	 0000000Ch   
+lines  . . . . . . . . . . . . .	Byte	 000002D6 _DATA	
+magenta  . . . . . . . . . . . .	Number	 00000005h   
+matrix_file_handle . . . . . . .	DWord	 00000286 _DATA	
+matrix_input_from_file . . . . .	DWord	 000002A2 _DATA	
+matrix_string_from_user_input  .	DWord	 0000029E _DATA	
+matrix_string_length . . . . . .	DWord	 000002C2 _DATA	
+matrix_txt . . . . . . . . . . .	Byte	 00000000 _DATA	
+max_matrix_area  . . . . . . . .	Number	 000003E8h   
+original_text  . . . . . . . . .	Byte	 00000033 _DATA	
+other_heap_handle  . . . . . . .	DWord	 00000282 _DATA	
+other_heap_limit . . . . . . . .	Number	 3B8B87C0h   
+other_heap_start . . . . . . . .	Number	 055D4A80h   
+output_final_string_ptr  . . . .	DWord	 000002BE _DATA	
+output_matrix_txt  . . . . . . .	Byte	 0000000B _DATA	
+output_rotated_matrix_array  . .	DWord	 000002BA _DATA	
+output_rotated_matrix_string . .	DWord	 000002B6 _DATA	
+pixel_divider  . . . . . . . . .	DWord	 000002FA _DATA	
+pixel_size . . . . . . . . . . .	Number	 00000003h   
+random_matrix_array_rotated  . .	DWord	 000002B2 _DATA	
+random_matrix_array  . . . . . .	DWord	 000002AA _DATA	
+random_matrix_string_rotated . .	DWord	 000002AE _DATA	
+random_matrix_string . . . . . .	DWord	 000002A6 _DATA	
+red  . . . . . . . . . . . . . .	Number	 00000004h   
+remainder_holder . . . . . . . .	DWord	 000002F6 _DATA	
+rotated_text . . . . . . . . . .	Byte	 00000063 _DATA	
+user_se_input_lyn_string . . . .	Byte	 0000008A _DATA	
+user_se_input_lyn_txt  . . . . .	Byte	 0000001D _DATA	
+white  . . . . . . . . . . . . .	Number	 0000000Fh   
+wsprintf . . . . . . . . . . . .	Text   	 wsprintfA
+yellow . . . . . . . . . . . . .	Number	 0000000Eh   
+
+	   0 Warnings
+	   0 Errors
