@@ -72,7 +72,16 @@ waqar proto
 ;		1- Choice	(eax)
 ; ------------------------------------------------------------------
 
+; ----------------------------------------------------------------
 fill_array_with_random_values proto
+; RECIEVES:	
+;		1- Empty Array	(edx)
+;		2- Array Dimensions	(ebx)
+; SPITS:
+;		1- Filled Array	(edx)
+;
+; ----------------------------------------------------------------
+
 
 pixel_size		= 3
 max_matrix_area		= 1000
