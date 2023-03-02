@@ -84,7 +84,7 @@ fill_array_with_random_values proto
 
 
 pixel_size		= 3
-max_matrix_area		= 1000
+max_matrix_area		= 10000000
 
 heap_start		= 10000000
 heap_end		= 900000000
