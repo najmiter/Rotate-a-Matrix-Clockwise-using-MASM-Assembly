@@ -87,9 +87,9 @@ pixel_size		= 3
 max_matrix_area		= 10000000
 
 heap_start		= 10000000
-heap_end		= 900000000
-other_heap_start	= 90000000
-other_heap_limit	= 999000000
+heap_end		= 90000000
+other_heap_start	= 10000000
+other_heap_limit	= 100000000
 
 .data
 	matrix_txt					byte "Matrix.txt", 0
